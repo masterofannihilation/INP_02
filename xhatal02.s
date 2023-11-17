@@ -12,30 +12,33 @@ main:
 outer_loop:
     xor $t6, $t6, $t6          ;swap flag vypnuty
 
-inner_loop:
-    lb $t2, 0(r4)       ; Načítanie znaku z reťazca
-    lb $t3, 1(r4)       ; Načítanie znaku z reťazca + 1
+    inner_loop:
+        lb $t2, 0(r4)                   ; Načítanie znaku z reťazca
+        lb $t3, 1(r4)                   ; Načítanie znaku z reťazca + 1
 
-    beqz $t3, end_sort    ;ak sme na konci, tak ideme dopici
-    
-    dsub $t5, $t2, $t3           ;porovnanie znakov vacsi mensi
-    daddi $t5, $t5, -1          ;
-    bgez $t5, swap              ;ak je t2 vacsi ako t3 tak swap
-    daddi r4, r4, 1              ;posun na dalsi znak
-    j inner_loop;               ;skok na zaciatok
+        beqz $t3, end_sort              ;ak sme na konci, tak ideme na end_sort
+        
+        dsub $t5, $t2, $t3              ;porovnanie znakov vacsi mensi
+        beqz $t5, no_swap
+        bgez $t5, swap                  ;ak je t2 vacsi ako t3 tak swap
+        j no_swap
 
-    swap:
-        sb $t2, 1(r4)               ;swap
-        sb $t3, 0(r4)               ;swap
-        xori $t6, $zero, 1           ;nastavenie swap flagu
-        daddi r4, r4, 1              ;posun na dalsi znak
-        j inner_loop
+        swap:
+            sb $t2, 1(r4)                   ;swap
+            sb $t3, 0(r4)                   ;swap
+            xori $t6, $zero, 1              ;nastavenie swap flagu
+            daddi r4, r4, 1                 ;posun na dalsi znak
+            j inner_loop
+        
+        no_swap:
+            daddi r4, r4, 1                 ;posun na dalsi znak
+            j inner_loop;                   ;skok na zaciatok
 
 end_sort:
     daddi r4, $zero, login      ;nastavenie adresy na zaciatok
-    bnez $t6, outer_loop ;ak bol swap tak opakujeme, ak ne , print
-    jal print_string    ; vypis pomoci print_string - viz nize
-    syscall 0   ; halt
+    bnez $t6, outer_loop        ;ak bol swap tak opakujeme, ak ne, print
+    jal print_string            ; vypis pomoci print_string - viz nize
+    syscall 0                   ; halt
 
 print_string:   ; adresa retezce se ocekava v r4
     sw      r4, params_sys5(r0)
